@@ -1,0 +1,26 @@
+ ##### Hace una captura y la guarda en la ruta indicada
+ Function Get-Screenshot {
+       $ScreenBounds = [Windows.Forms.SystemInformation]::VirtualScreen
+
+       $VideoController = Get-WmiObject -Query 'SELECT VideoModeDescription FROM Win32_VideoController'
+       00
+       if ($VideoController.VideoModeDescription -and $VideoController.VideoModeDescription -match '(?<1920>^\d+) x (?<1080>\d+) x .*$') {
+           $Width = [Int] $Matches['ScreenWidth']
+           $Height = [Int] $Matches['ScreenHeight']
+       } else {
+           $ScreenBounds = [Windows.Forms.SystemInformation]::VirtualScreen
+
+           $Width = $ScreenBounds.Width
+           $Height = $ScreenBounds.Height
+       }
+
+       $Size = New-Object System.Drawing.Size($Width, $Height)
+       $Point = New-Object System.Drawing.Point(0, 0)
+
+       $ScreenshotObject = New-Object Drawing.Bitmap $Width, $Height
+       $DrawingGraphics = [Drawing.Graphics]::FromImage($ScreenshotObject)
+       $DrawingGraphics.CopyFromScreen($Point, [Drawing.Point]::Empty, $Size)
+       $DrawingGraphics.Dispose()
+       $ScreenshotObject.Save("")  #### Ruta ####
+       $ScreenshotObject.Dispose()
+    }
