@@ -1,0 +1,47 @@
+###### Crear Grupos leyendo de un fichero ######
+gc C:\grupos.txt | %{
+    New-ADGroup -name (($_).split(",")[0]) -GroupScope Global
+   Get-ADGroup -Filter 'Name -like "*"' | Format-Table Name, DistinguishedName -A  ### Muestra todos los grupos creados ###
+}
+
+
+##### Crear usuarios y meterlos en un grupo leyendo por fichero #####
+gc C:\usuarios.txt | %{
+    New-aduser -name (($_).split(",")[0]) -sam (($_).split(",")[0]) -accountpassword (convertto-securestring "Andel2020!" -asplaintext -force) -enable $true
+    Add-ADGroupMember (($_).split(",")[1]) -Members (($_).split(",")[0])
+    Get-ADUser -Filter 'Name -like "*"' | Format-Table Name, DistinguishedName -A
+    $grupo= Read-Host "Introduzca el nombre del grupo"   #### Verificar que se han metido los usuarios al grupo ####
+    Get-ADGroupMember "$grupo" | Select-Object Name 
+}
+
+
+##### Mover usuarios a una OU #####
+Move-ADObject "CN=David,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ITEL1,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Victor,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ITEL1,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Sergio,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ITEL2,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Gonzalo,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ITEL2,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Christian,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=SMIR1,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Mario,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=SMIR1,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Jesus,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=SMIR2,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Miguel,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=SMIR2,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Antonio,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ASIR1,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Aaron,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ASIR1,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Alvaro,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ASIR2,OU=Andel,DC=andelxd,DC=local"
+Move-ADObject "CN=Manuel,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=ASIR2,OU=Andel,DC=andelxd,DC=local"
+
+
+###### Deshabilitar usuarios #####
+
+    $name= Read-Host "Introduzca el nombre del usuario"
+    $clase= Read-Host "Introduzca el  nombre de la clase"   
+    $ou1= Read-Host "Introduzca el nombre de la unidad organizativa"  
+    $dc= Read-Host "Introduzca el nombre del dominio en el que se encuentra"
+    $des= Read-Host "Itroduzca la OU dónde desea mover al usuario"
+
+Get-ADUser -Filter {samaccountname -like "$name"} -SearchBase "OU=$clase,OU=$ou1,DC=$dc,DC=local" | Disable-ADAccount
+Move-ADObject "CN=$name,OU=$clase,OU=Andel,DC=andelxd,DC=local" -TargetPath "OU=Deshabilitados,OU=Andel,DC=andelxd,DC=local"
+
+##### Borrar OU's #####
+
+$borrar= Read-Host "Introduzca el nombre de la unidad organizativa que desea borrar"  
+Remove-ADOrganizationalUnit -Identity "OU=$borrar,OU=Andel,DC=andelxd,DC=local" -Recursive
