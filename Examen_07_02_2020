@@ -1,3 +1,15 @@
+##### Crear Unidades Organizativas y las muestra ######
+New-ADOrganizationalUnit -Name "Andel" -Path "DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "SMIR1" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "SMIR2" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "ITEL1" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "ITEL2" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "ASIR1" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "ASIR2" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+New-ADOrganizationalUnit -Name "Deshabilitados" -Path "OU=Andel,DC=andelxd,DC=local" -ProtectedFromAccidentalDeletion $False
+Get-ADOrganizationalUnit -Filter 'Name -like "*"' | Format-Table Name, DistinguishedName -A
+
+
 ###### Crear Grupos leyendo de un fichero ######
 gc C:\grupos.txt | %{
     New-ADGroup -name (($_).split(",")[0]) -GroupScope Global
