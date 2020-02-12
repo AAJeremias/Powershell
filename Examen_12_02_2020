@@ -1,0 +1,86 @@
+##### Creación de OU's, Grupos, Usuarios y contraseñas ######
+
+Write-Host "Introduzca el nombre de la OU al que pertenecerá" -ForegroundColor Green
+ $OU=Read-Host "OU"
+Write-Host "Introduzca el nombre del grupo al que pertenecerá" -ForegroundColor Green
+ $group=Read-Host "Grupo"
+Write-Host "Introduzca el nombre de usuario" -ForegroundColor Green
+ $Nombre=Read-Host "Usuario"
+Write-Host "Introduzca la contraseña" -ForegroundColor Green
+ $pass=Read-Host "Contraseña"
+"$OU,$group,$Nombre,$pass" >> estructura.csv
+
+
+####################   Archivo estructura.csv  #######################
+clase1,clase1,alumno1,AB1234cd                                       #
+clase1,clase1,alumno2,AB1234cd                                       #
+clase2,clase2,alumno3,AB1234cd                                       #
+clase2,clase2,alumno4,AB1234cd                                       #
+clase3,clase3,alumno5,AB1234cd                                       #
+clase3,clase3,alumno6,AB1234cd                                      #
+clase4,clase4,alumno7,AB1234cd                                       #
+clase4,clase4,alumno8,AB1234cd                                       #
+clase5,clase5,alumno9,AB1234cd                                       #
+clase5,clase5,alumno10,AB1234cd                                      #
+clase6,clase6,alumno11,AB1234cd                                      #
+clase6,clase6,alumno12,AB1234cd                                      #
+######################################################################
+
+
+
+foreach($vars in (gc estructura.csv)){
+    $OU= $vars.split(",")[0]
+    $grupo= $vars.split(",")[1]
+    $usuario= $vars.split(",")[2]
+    $contraseña= $vars.split(",")[3]
+  New-ADOrganizationalUnit -Name $OU -ProtectedFromAccidentalDeletion $False -Path "OU=Andel,DC=andelxd,DC=local"
+    Start-Sleep -Milliseconds 800
+  New-ADuser -name $usuario -sam $usuario -accountpassword (convertto-securestring $contraseña -asplaintext -force) -enable $true
+    Write-Host "Usuario '$usuario' creado " -ForegroundColor Green
+    Start-Sleep -Milliseconds 800
+  New-ADGroup -name $grupo -GroupScope Global -Path "OU=$OU,OU=Andel,DC=andelxd,DC=local"
+    Write-Host "Grupo '$grupo' creado " -ForegroundColor Green
+    Start-Sleep -Milliseconds 800
+  Add-ADGroupMember $grupo -Members $usuario
+    Write-Host "Usuario '$usuario' se introdujo dentro del grupo '$grupo' " -ForegroundColor Green
+  Move-ADObject "CN=$usuario,CN=Users,DC=andelxd,DC=local" -TargetPath "OU=$OU,OU=Andel,DC=andelxd,DC=local"
+    Write-Host "Usuario '$usuario' se introdujo dentro de la OU '$OU' " -ForegroundColor Green
+    }
+Start-Sleep -Milliseconds 100;
+
+```` No consigo que me deshabilite los usuarios
+###### Deshabilitar usuarios #####
+
+Write-Host "Introduzca el nombre del Usuario que quiere deshabilitar" -ForegroundColor yellow
+    $name= Read-Host "Usuario"
+Write-Host "Introduzca el nombre de la Clase a la que pertenece" -ForegroundColor yellow
+    $clase= Read-Host "Clase"   
+
+Get-ADUser -Filter {samaccountname -like "$name"} -SearchBase "OU=$clase,OU=Andel,DC=andelxd,DC=local" | Disable-ADAccount
+Move-ADObject "CN=$name,OU=$clase,OU=Andel,DC=andelxd,DC=local" -TargetPath "OU=Deshabilitados,OU=Andel,DC=andelxd,DC=local"
+
+##### Borrar OU's #####
+
+$borrar= Read-Host "Introduzca el nombre de la unidad organizativa que desea borrar"  
+Remove-ADOrganizationalUnit -Identity "OU=$borrar,DC=andelxd,DC=local" -Recursive
+
+
+ ```` ESTA PARTE NO LA HE LLEGADO A COMPROBAR
+################# Crear carpeta para cada usuario ################
+
+foreach($vars in (gc estructura.csv)){
+    $usuario= $vars.split(",")[1]
+    New-Item "C:\Users\Public\$usuario" -ItemType Directory -Force
+    Write-Host "Se ha creado la carpeta del usuario" -ForegroundColor Yellow
+    New-SMBShare –Name $usuario –Path C:\Users\Public  -Description "Carpeta de $usuario"
+    Write-Host "La carpeta ha sido compartida" -ForegroundColor Yellow
+    }
+
+############# Copias de seguridad #####################
+
+mkdir (Get-Date).ToString("yyyyMMdd")
+cd (Get-Date).ToString("yyyyMMdd")
+Get-ChildItem ../ *.txt | Copy-Item
+
+Get-ChildItem | select LastWriteTime
+Get-ChildItem ../  | where LastWriteTime -gt (Get-Date).AddDays(-1) | Copy-Item
